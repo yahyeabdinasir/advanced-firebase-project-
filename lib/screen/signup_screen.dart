@@ -1,3 +1,5 @@
+import 'package:advanced_firebase/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
@@ -16,6 +18,9 @@ class _SignupScreenState extends State<SignupScreen> {
       TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService();
+
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -25,20 +30,50 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  void _signup() {
+  Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
-      // Later: FirebaseAuth.instance.createUserWithEmailAndPassword(...)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await _authService.register(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } on FirebaseAuthException catch (e) {
+        // Firebase sends error codes we can show as friendly messages
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_messageForAuthError(e))));
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _messageForAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'email-already-in-use':
+        return 'This email already has an account';
+      case 'weak-password':
+        return 'Password is too weak.';
+      case 'invalid-email':
+        return 'Email format looks invalid.';
+      default:
+        return e.message ?? 'sign up  failed.';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurpleAccent,
+
       appBar: AppBar(title: const Text('Sign Up')),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -89,9 +124,16 @@ class _SignupScreenState extends State<SignupScreen> {
                 },
               ),
               const SizedBox(height: 16),
+              // Sign Up button: registers the user in Firebase
               ElevatedButton(
-                onPressed: _signup,
-                child: const Text('Sign Up'),
+                onPressed: _isLoading ? null : _signup,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Sign Up'),
               ),
               TextButton(
                 onPressed: () {

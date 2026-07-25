@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'signup_screen.dart';
 
@@ -20,6 +22,12 @@ class _LoginScreenState extends State<LoginScreen> {
   // Form key lets us validate all fields together
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // Our small Firebase Auth helper
+  final AuthService _authService = AuthService();
+
+  // Shows a loading spinner while Firebase is working
+  bool _isLoading = false;
+
   @override
   void dispose() {
     // Always dispose controllers to free memory
@@ -28,28 +36,60 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     // Runs validators on each TextFormField
-    if (_formKey.currentState!.validate()) {
-      // Later: call Firebase Auth here
-      // For now: go to HomeScreen
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Ask Firebase: does this email + password match an existing user?
+      await _authService.login(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return; // screen may be gone after await
+
+      // Success → go to Home (replace so Back does not return to Login)
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
+    } on FirebaseAuthException catch (e) {
+      // Firebase sends error codes we can show as friendly messages
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_messageForAuthError(e))),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Turns Firebase error codes into short user-facing text.
+  String _messageForAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No account for this email. Create one first.';
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Wrong email or password.';
+      case 'invalid-email':
+        return 'Email format looks invalid.';
+      default:
+        return e.message ?? 'Login failed.';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.greenAccent,
-      
-      appBar: AppBar(title: const Text('Login'),
-      backgroundColor: Colors.lightGreen,
+      appBar: AppBar(
+        title: const Text('Login'),
+        backgroundColor: Colors.lightGreen,
       ),
-        body: Padding(
-
+      body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
@@ -78,9 +118,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 16),
+              // Disable the button while Firebase is busy
               ElevatedButton(
-                onPressed: _login,
-                child: const Text('Login'),
+                onPressed: _isLoading ? null : _login,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Login'),
               ),
               TextButton(
                 onPressed: () {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/auth_service.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -7,13 +8,18 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authService = AuthService();
+    final email = authService.currentUser?.email ?? 'Unknown';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
-          // Simple logout: go back to LoginScreen
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              // Sign out of Firebase, then return to Login
+              await authService.logout();
+              if (!context.mounted) return;
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -23,8 +29,8 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Text('Welcome! You are logged in.'),
+      body: Center(
+        child: Text('Welcome, $email'),
       ),
     );
   }
