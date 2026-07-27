@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'firebase_options.dart';
-import 'screen/login_screen.dart';
+import 'widget/auth_gate.dart';
 
 void main() async {
   // Required before using any Flutter plugin (like Firebase)
@@ -24,7 +24,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Advanced Firebase',
-      home: const LoginScreen(), // App starts on Login
+      // AuthGate listens to the saved login session:
+      // already logged in → Home, otherwise → Login
+      home: const AuthGate(),
     );
   }
 }

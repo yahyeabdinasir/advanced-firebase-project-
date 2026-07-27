@@ -1,8 +1,9 @@
 import 'package:advanced_firebase/services/auth_service.dart';
+import 'package:advanced_firebase/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'home_screen.dart';
+import '../models/user_model.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -12,6 +13,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -19,11 +21,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
 
   bool _isLoading = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -31,29 +35,50 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _signup() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        await _authService.register(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } on FirebaseAuthException catch (e) {
-        // Firebase sends error codes we can show as friendly messages
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_messageForAuthError(e))));
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
-      }
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    User? createdUser;
+    try {
+      final credential = await _authService.register(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      createdUser = credential.user;
+      if (createdUser == null) throw Exception('User was not created.');
+
+      await _userService.createUser(
+        UserModel(
+          uid: createdUser.uid,
+          email: createdUser.email ?? _emailController.text.trim(),
+          name: _nameController.text.trim(),
+          createdAt: DateTime.now(),
+        ),
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_messageForAuthError(e))));
+    } on FirebaseException catch (e) {
+      await createdUser?.delete();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_messageForFirestoreError(e))));
+    } catch (e) {
+      await createdUser?.delete();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save profile: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -66,83 +91,145 @@ class _SignupScreenState extends State<SignupScreen> {
       case 'invalid-email':
         return 'Email format looks invalid.';
       default:
-        return e.message ?? 'sign up  failed.';
+        return e.message ?? 'Sign up failed.';
+    }
+  }
+
+  String _messageForFirestoreError(FirebaseException e) {
+    switch (e.code) {
+      case 'permission-denied':
+        return 'Permission denied saving profile. Ask your admin to deploy Firestore rules.';
+      case 'unavailable':
+        return 'Firestore is unavailable. Check your connection and try again.';
+      default:
+        return e.message ?? 'Could not save profile.';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       appBar: AppBar(title: const Text('Sign Up')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter email';
-                  }
-                  return null;
-                },
+      body: Center(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: .center,
+                children: [
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      prefix: Icon(Icons.person),
+                     
+                      hintText: "your name ",
+                      labelText: 'Name',
+                    ),
+
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Enter your name';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 10,),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      prefix: Icon(Icons.attach_email),
+                      
+
+                      labelText: 'Email',
+                      hintText: "exmaple@gmail.com"
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Enter email';
+                      }
+                      return null;
+                    },
+                  ),
+                   SizedBox(height: 10,),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+
+                      prefix: Icon(Icons.password_outlined),
+
+                      labelText: 'Password',
+                      
+                      hintText: "passoword"
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Enter password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                   SizedBox(height: 10,),
+                  TextFormField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      prefix: Icon(Icons.password_outlined),
+                      labelText: 'Confirm Password',
+                        hintText: "passoword"
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Confirm password';
+                      }
+                      // Compare with password field
+                      if (value != _passwordController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // Sign Up button: registers the user in Firebase
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _signup,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Sign Up'),
+                  ),
+                  SizedBox(height: 20,),
+                  TextButton(
+                    onPressed: () {
+                      // Go back to login
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Already have an account? Login'),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter password';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Confirm Password',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Confirm password';
-                  }
-                  // Compare with password field
-                  if (value != _passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              // Sign Up button: registers the user in Firebase
-              ElevatedButton(
-                onPressed: _isLoading ? null : _signup,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Sign Up'),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Go back to login
-                  Navigator.pop(context);
-                },
-                child: const Text('Already have an account? Login'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

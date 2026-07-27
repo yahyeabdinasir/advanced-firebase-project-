@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
-import 'home_screen.dart';
 import 'signup_screen.dart';
 
 // StatefulWidget = can change (text in fields, etc.)
@@ -49,13 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
 
-      if (!mounted) return; // screen may be gone after await
-
-      // Success → go to Home (replace so Back does not return to Login)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      // Success → AuthGate hears the new user and shows Home automatically.
+      // No Navigator.pushReplacement needed.
     } on FirebaseAuthException catch (e) {
       // Firebase sends error codes we can show as friendly messages
       if (!mounted) return;
@@ -86,62 +80,67 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
-        backgroundColor: Colors.lightGreen,
+        title: const Text('University App'),
+        centerTitle: true,
+
       ),
       body: Padding(
+        
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter email';
-                  }
-                  return null; // null = valid
-                },
-              ),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true, // hides password
-                decoration: const InputDecoration(labelText: 'Password'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter password';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              // Disable the button while Firebase is busy
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Login'),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Navigate to Sign Up screen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SignupScreen(),
-                    ),
-                  );
-                },
-                child: const Text('Create account'),
-              ),
-            ],
+        child: Center(
+          child: Form(
+            key: _formKey,
+            child: Column(
+             mainAxisAlignment: .center,
+              children: [
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Enter email';
+                    }
+                    return null; // null = valid
+                  },
+                ),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true, // hides password
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Enter password';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Disable the button while Firebase is busy
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Login'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Navigate to Sign Up screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SignupScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Create account'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
