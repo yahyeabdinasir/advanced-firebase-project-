@@ -80,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.blue,
         title: const Text('Home'),
         actions: [
           TextButton(
@@ -102,52 +103,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: _isLoading
                       ? const CircularProgressIndicator()
                       : _loadError != null
-                          ? Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    _loadError!,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.red),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton(
-                                    onPressed: _loadProfile,
-                                    child: const Text('Retry'),
-                                  ),
-                                ],
+                      ? Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _loadError!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.red),
                               ),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  name == null || name.isEmpty
-                                      ? 'Welcome, $email'
-                                      : 'Welcome, $name',
-                                  style: const TextStyle(fontSize: 20),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  email,
-                                  style: const TextStyle(color: Colors.grey),
-                                ),
-                                if (_profile == null) ...[
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'No Firestore profile yet.\n'
-                                    'Create a new account to save name in users/{uid}.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                ],
-                              ],
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _loadProfile,
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              name == null || name.isEmpty
+                                  ? 'Welcome, $email'
+                                  : 'Welcome, $name',
+                              style: const TextStyle(fontSize: 20),
                             ),
+                            const SizedBox(height: 8),
+                            Text(
+                              email,
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            if (_profile == null) ...[
+                              const SizedBox(height: 16),
+                              const Text(
+                                'No Firestore profile yet.\n'
+                                'Create a new account to save name in users/{uid}.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                 ),
               ),
             );

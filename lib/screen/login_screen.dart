@@ -1,3 +1,6 @@
+import 'dart:nativewrappers/_internal/vm/lib/ffi_native_type_patch.dart';
+
+import 'package:advanced_firebase/services/local_prefs_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -9,9 +12,15 @@ import 'signup_screen.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
+  
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
+
+
+
+
 
 class _LoginScreenState extends State<LoginScreen> {
   // Controllers hold the text the user types
@@ -24,9 +33,29 @@ class _LoginScreenState extends State<LoginScreen> {
   // Our small Firebase Auth helper
   final AuthService _authService = AuthService();
 
+  // our shared preference class setup 
+  final LocalPrefsService _sharedPreference= LocalPrefsService();
+
   // Shows a loading spinner while Firebase is working
   bool _isLoading = false;
 
+
+
+@override
+  void initState() async{
+  await _sharedPreference.getEmail();
+ 
+    super.initState();
+  }
+
+
+  Future<void> LoadSavedEmail() async {
+    final savedEmail = await  _sharedPreference.getEmail();
+
+    if (_emailController != null) {
+      _emailController.text = savedEmail;
+    }
+  }
   @override
   void dispose() {
     // Always dispose controllers to free memory
@@ -34,6 +63,8 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
+
+
 
   Future<void> _login() async {
     // Runs validators on each TextFormField
@@ -53,9 +84,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } on FirebaseAuthException catch (e) {
       // Firebase sends error codes we can show as friendly messages
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_messageForAuthError(e))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_messageForAuthError(e))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -79,19 +110,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('University App'),
-        centerTitle: true,
-
-      ),
+      appBar: AppBar(title: const Text('University App'), centerTitle: true),
       body: Padding(
-        
         padding: const EdgeInsets.all(16),
         child: Center(
           child: Form(
             key: _formKey,
             child: Column(
-             mainAxisAlignment: .center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextFormField(
                   controller: _emailController,
