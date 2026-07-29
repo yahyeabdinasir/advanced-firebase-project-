@@ -1,5 +1,4 @@
-import 'dart:nativewrappers/_internal/vm/lib/ffi_native_type_patch.dart';
-
+import 'package:advanced_firebase/services/fcm_service.dart';
 import 'package:advanced_firebase/services/local_prefs_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,82 +6,57 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'signup_screen.dart';
 
-// StatefulWidget = can change (text in fields, etc.)
-// StatelessWidget = fixed UI that does not change
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
-  
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-
-
-
-
 class _LoginScreenState extends State<LoginScreen> {
-  // Controllers hold the text the user types
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  // Form key lets us validate all fields together
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  // Our small Firebase Auth helper
   final AuthService _authService = AuthService();
+  final FcmService _fcmService = FcmService();
+  final LocalPrefsService _sharedPreference = LocalPrefsService();
 
-  // our shared preference class setup 
-  final LocalPrefsService _sharedPreference= LocalPrefsService();
-
-  // Shows a loading spinner while Firebase is working
   bool _isLoading = false;
 
-
-
-@override
-  void initState() async{
-  await _sharedPreference.getEmail();
- 
+  @override
+  void initState() {
     super.initState();
+    _loadSavedEmail();
   }
 
-
-  Future<void> LoadSavedEmail() async {
-    final savedEmail = await  _sharedPreference.getEmail();
-
-    if (_emailController != null) {
+  Future<void> _loadSavedEmail() async {
+    final savedEmail = await _sharedPreference.getEmail();
+    if (savedEmail != null && mounted) {
       _emailController.text = savedEmail;
     }
   }
+
   @override
   void dispose() {
-    // Always dispose controllers to free memory
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-
-
   Future<void> _login() async {
-    // Runs validators on each TextFormField
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // Ask Firebase: does this email + password match an existing user?
       await _authService.login(
         email: _emailController.text,
         password: _passwordController.text,
       );
 
-      // Success → AuthGate hears the new user and shows Home automatically.
-      // No Navigator.pushReplacement needed.
+      await _sharedPreference.saveEmail(_emailController.text.trim());
+      await _fcmService.SetUpaAfterLogin();
     } on FirebaseAuthException catch (e) {
-      // Firebase sends error codes we can show as friendly messages
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -92,7 +66,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// Turns Firebase error codes into short user-facing text.
   String _messageForAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
@@ -127,12 +100,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Enter email';
                     }
-                    return null; // null = valid
+                    return null;
                   },
                 ),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true, // hides password
+                  obscureText: true,
                   decoration: const InputDecoration(labelText: 'Password'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -142,7 +115,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                // Disable the button while Firebase is busy
                 ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   child: _isLoading
@@ -155,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 TextButton(
                   onPressed: () {
-                    // Navigate to Sign Up screen
                     Navigator.push(
                       context,
                       MaterialPageRoute(

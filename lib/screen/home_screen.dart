@@ -39,7 +39,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-  /// Read the Firestore profile for the logged-in Auth user.
   Future<void> _loadProfile() async {
     final uid = _authService.currentUser?.uid;
     if (uid == null) {

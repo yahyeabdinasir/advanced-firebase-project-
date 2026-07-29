@@ -1,4 +1,5 @@
 import 'package:advanced_firebase/services/auth_service.dart';
+import 'package:advanced_firebase/services/fcm_service.dart';
 import 'package:advanced_firebase/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
+
+
+
+  final FcmService _fcmService = FcmService();
 
   bool _isLoading = false;
 
@@ -55,8 +60,12 @@ class _SignupScreenState extends State<SignupScreen> {
           email: createdUser.email ?? _emailController.text.trim(),
           name: _nameController.text.trim(),
           createdAt: DateTime.now(),
+
+
+          
         ),
       );
+      await _fcmService.SetUpaAfterLogin();
 
       if (!mounted) return;
       Navigator.pop(context);
@@ -200,7 +209,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Confirm password';
                       }
-                      // Compare with password field
                       if (value != _passwordController.text) {
                         return 'Passwords do not match';
                       }
@@ -208,7 +216,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  // Sign Up button: registers the user in Firebase
                   ElevatedButton(
                     onPressed: _isLoading ? null : _signup,
                     child: _isLoading
@@ -222,7 +229,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   SizedBox(height: 20,),
                   TextButton(
                     onPressed: () {
-                      // Go back to login
                       Navigator.pop(context);
                     },
                     child: const Text('Already have an account? Login'),
