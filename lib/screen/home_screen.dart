@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/user_model.dart';
-import '../services/auth_service.dart';
+import '../providers/auth_provider.dart';
 import '../services/user_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,7 +13,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  final AuthService _authService = AuthService();
   final UserService _userService = UserService();
 
   UserModel? _profile;
@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadProfile() async {
-    final uid = _authService.currentUser?.uid;
+    final uid = context.read<AuthProvider>().user?.uid;
     if (uid == null) {
       if (!mounted) return;
       setState(() {
@@ -74,7 +74,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final email = _authService.currentUser?.email ?? 'Unknown';
+    final auth = context.watch<AuthProvider>();
+    final email = auth.user?.email ?? 'Unknown';
     final name = _profile?.name;
 
     return Scaffold(
@@ -84,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         actions: [
           TextButton(
             onPressed: () async {
-              await _authService.logout();
+              await context.read<AuthProvider>().logout();
             },
             child: const Text('Logout', style: TextStyle(color: Colors.white)),
           ),

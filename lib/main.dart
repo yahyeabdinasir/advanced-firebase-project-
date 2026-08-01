@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
+import 'providers/auth_provider.dart';
+import 'services/auth_service.dart';
 import 'widget/auth_gate.dart';
 
 void main() async {
@@ -19,10 +22,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Advanced Firebase',
-      home: const AuthGate(),
+    return MultiProvider(
+      providers: [
+        Provider(create: (_) => AuthService()),
+        ChangeNotifierProvider(
+          create: (ctx) => AuthProvider(ctx.read<AuthService>()),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Advanced Firebase',
+        home: const AuthGate(),
+      ),
     );
   }
 }

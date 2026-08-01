@@ -1,9 +1,9 @@
 import 'package:advanced_firebase/services/fcm_service.dart';
 import 'package:advanced_firebase/services/local_prefs_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../services/auth_service.dart';
+import '../providers/auth_provider.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,11 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
   final FcmService _fcmService = FcmService();
   final LocalPrefsService _sharedPreference = LocalPrefsService();
-
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -46,42 +43,29 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    final auth = context.read<AuthProvider>();
+    final success = await auth.login(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
 
-    try {
-      await _authService.login(
-        email: _emailController.text,
-        password: _passwordController.text,
+    if (!mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.errorMessage ?? 'Login failed.')),
       );
-
-      await _sharedPreference.saveEmail(_emailController.text.trim());
-      await _fcmService.SetUpaAfterLogin();
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_messageForAuthError(e))));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      return;
     }
-  }
 
-  String _messageForAuthError(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-        return 'No account for this email. Create one first.';
-      case 'wrong-password':
-      case 'invalid-credential':
-        return 'Wrong email or password.';
-      case 'invalid-email':
-        return 'Email format looks invalid.';
-      default:
-        return e.message ?? 'Login failed.';
-    }
+    await _sharedPreference.saveEmail(_emailController.text.trim());
+    await _fcmService.SetUpaAfterLogin();
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
       appBar: AppBar(title: const Text('University App'), centerTitle: true),
       body: Padding(
@@ -116,8 +100,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  child: _isLoading
+                  onPressed: auth.isLoading ? null : _login,
+                  child: auth.isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
