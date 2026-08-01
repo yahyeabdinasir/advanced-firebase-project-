@@ -1,158 +1,56 @@
+import 'package:advanced_firebase/screen/secound_Screen.dart';
 import 'package:flutter/material.dart';
 
-import '../models/user_model.dart';
-import '../services/auth_service.dart';
-import '../services/user_service.dart';
-
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  final AuthService _authService = AuthService();
-  final UserService _userService = UserService();
+class _HomeScreenState extends State<HomeScreen> {
+  final List<int> numbers = [1, 2, 3, 4, 5];
 
-  UserModel? _profile;
-  bool _isLoading = true;
-  String? _loadError;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _loadProfile();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _loadProfile();
-    }
-  }
-
-  Future<void> _loadProfile() async {
-    final uid = _authService.currentUser?.uid;
-    if (uid == null) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _loadError = null;
-      });
-      return;
-    }
-
-    if (!mounted) return;
+  void IncrementNumber() {
     setState(() {
-      _isLoading = true;
-      _loadError = null;
+      numbers.add(numbers.last + 1);
     });
-
-    try {
-      final profile = await _userService.getUser(uid);
-      if (!mounted) return;
-      setState(() {
-        _profile = profile;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _loadError = 'Could not load profile. Pull down or tap Retry.';
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final email = _authService.currentUser?.email ?? 'Unknown';
-    final name = _profile?.name;
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text('Home'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await _authService.logout();
+      appBar: AppBar(backgroundColor: Theme.of(context).primaryColor),
+      body: Column(
+        children: [
+          Text(numbers.last.toString()),
+          Expanded(
+            child: ListView.builder(
+              itemCount: 10,
+              itemBuilder: (context, index) {
+                return Text(numbers[index].toString());
+              },
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SecoundScreen(numbers: numbers),
+                ),
+              );
             },
-            child: const Text('Logout', style: TextStyle(color: Colors.white)),
+            child: Text('Go to Second Screen'),
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadProfile,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Center(
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : _loadError != null
-                      ? Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _loadError!,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _loadProfile,
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              name == null || name.isEmpty
-                                  ? 'Welcome, $email'
-                                  : 'Welcome, $name',
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              email,
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                            if (_profile == null) ...[
-                              const SizedBox(height: 16),
-                              const Text(
-                                'No Firestore profile yet.\n'
-                                'Create a new account to save name in users/{uid}.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                ),
-              ),
-            );
-          },
-        ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          IncrementNumber();
+        },
+        child: Icon(Icons.add, color: Theme.of(context).primaryColorLight),
       ),
     );
   }

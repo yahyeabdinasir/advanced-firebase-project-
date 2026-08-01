@@ -1,17 +1,9 @@
+import 'package:advanced_firebase/screen/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 
-import 'firebase_options.dart';
-import 'widget/auth_gate.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  runApp(const MyApp());
+void main() {
+  runApp( MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -19,10 +11,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return  MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Advanced Firebase',
-      home: const AuthGate(),
-    );
+      theme: ThemeData(
+        primaryColor: Colors.blue,
+      ),
+      home:  HomeScreen());
   }
 }
