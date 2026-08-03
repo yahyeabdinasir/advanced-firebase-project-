@@ -1,39 +1,33 @@
+import 'package:advanced_firebase/providers/numbers_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SecoundScreen extends StatefulWidget {
-    final List<int> numbers;
-
-  const SecoundScreen({super.key, required this.numbers});
-
-  @override
-  State<SecoundScreen> createState() => _SecoundScreenState();
-}
-
-class _SecoundScreenState extends State<SecoundScreen> {
-
+/// Same provider as HomeScreen — shared state, no constructor list.
+class SecoundScreen extends ConsumerWidget {
+  const SecoundScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final numbers = ref.watch(numbersProvider);
+
     return Scaffold(
       appBar: AppBar(backgroundColor: Theme.of(context).primaryColor),
       body: Column(
         children: [
-          Text(widget.numbers.last.toString()),
+          Text(numbers.last.toString()),
           Expanded(
             child: ListView.builder(
-              itemCount: 10,
+              itemCount: numbers.length,
               itemBuilder: (context, index) {
-                return const Text('1');
+                return Text((numbers[index] * 10).toString());
               },
             ),
           ),
-        
         ],
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-         Navigator.pop(context);
+          ref.read(numbersProvider.notifier).increment();
         },
         child: Icon(Icons.add, color: Theme.of(context).primaryColorLight),
       ),

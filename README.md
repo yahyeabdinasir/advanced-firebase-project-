@@ -1,17 +1,16 @@
 # advanced_firebase
 
-A new Flutter project.
+Flutter app used to learn **shared state** with Riverpod (two screens, one number list).
 
-## Getting Started
+## Riverpod learning docs
 
-This project is a starting point for a Flutter application.
+Start here — side effects of `setState`, then the minimum Riverpod flow:
 
-A few resources to get you started if this is your first Flutter project:
+→ **[docs/riverpod_basics.md](docs/riverpod_basics.md)**
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Run
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter run
+```
