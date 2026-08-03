@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// - Every listener rebuilds when `state` changes
 class NumbersNotifier extends Notifier<List<int>> {
   @override
+  // Inside "build", we return the initial state of the counter.
   List<int> build() => [1, 2, 3, 4, 5];
 
   void increment() {
