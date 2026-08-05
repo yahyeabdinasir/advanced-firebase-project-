@@ -20,7 +20,9 @@ class TodoNotifier extends StateNotifier<List<Todo>>  {
 
 
   void removeTodo(String id) {
-    state = state.where((delelteItem) => delelteItem.id != id).toList();
+    state = state.where((deleteItem)  {
+      return deleteItem.id != id;
+    }).toList(); 
   }
 
 

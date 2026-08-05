@@ -35,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
             )
           : ListView.builder(
               itemCount: todos.length,
-              itemBuilder: (_, index) {
+              itemBuilder: (context, index) {
                 final todo = todos[index];
 
                 return TodoTile(
