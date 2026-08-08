@@ -1,33 +1,36 @@
-class Todo {
-  Todo({required this.id, required this.title, required this.completed});
+import 'package:advanced_firebase/features/todo/domain/entities/todo_entities.dart';
 
-  final String id;
-  final String title;
-  final bool completed;
+class TodoModel  extends TodoEntities { 
 
-  // Instead of changing an object directly:   todo.completed = true; // ❌
-  // We create a new object:
+   TodoModel({
+       
+    required super.id , 
+    required super.title , 
+    required super.completed 
+  });
 
-  // final updated = todo.copyWith(completed: true);
 
-  // This keeps our state immutable, which is the recommended pattern in Riverpod
-  Todo copyWith({String? id, String? title, bool? completed}) {
-    return Todo(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      completed: completed ?? this.completed,
+
+  // our api gives us a JSON response, so we need to convert that JSON into our Dart object. The fromJson factory constructor takes a Map<String, dynamic> as input and returns an instance of TodoModel.
+  // It extracts the values from the JSON map and assigns them to the corresponding properties of the TodoModel class. This allows us to easily create TodoModel objects from the JSON data we receive from the API.
+
+// converts that JSON into our Dart object.
+
+  factory TodoModel.fromJson(Map<String , dynamic> json ) {
+    return TodoModel(
+      id : json['id'] as int ,
+      title : json['title'] as String ,
+       completed : json['completed'] as bool
     );
   }
 
-  factory Todo.fromJson(Map<String, dynamic> json) => Todo(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    completed: json['completed'] as bool,
-  );
 
-  Map<String, dynamic> tojson() => {
-    'id': id,
-    'title': title,
-    'completed': completed,
-  };
+
+  Map<String , dynamic> toJson() {
+    return {
+      'id' : id ,
+      'title' : title ,
+      'completed' : completed
+    };
+  }
 }
