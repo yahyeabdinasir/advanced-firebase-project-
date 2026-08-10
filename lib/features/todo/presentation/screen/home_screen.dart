@@ -1,6 +1,4 @@
-
-
-
+import 'package:advanced_firebase/features/todo/presentation/screen/todo_screen.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -8,10 +6,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return const TodoScreen();
   }
 }
-
 
 // import 'package:advanced_firebase/presentation/widget/todo_title.dart';
 // import 'package:advanced_firebase/presentation/widget/add_todo_dialog.dart';
@@ -19,7 +16,6 @@ class HomeScreen extends StatelessWidget {
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // // import '../providers/todo_provider.dart';
-
 
 // class HomeScreen extends ConsumerWidget {
 //   const HomeScreen({super.key});
@@ -30,14 +26,11 @@ class HomeScreen extends StatelessWidget {
 // // It contains methods like watch, read, and listen that allow you to interact with providers and manage state in your Flutter application.
 //   Widget build(BuildContext context, WidgetRef ref) {
 
-
-
-
 //     // ref it is the way to access the provider in Riverpod .
 //     // it allow you to read and watch the state of the provider
-//     // and also it's used to interact with the state of the provider and rebuild the widget when the state changes 
+//     // and also it's used to interact with the state of the provider and rebuild the widget when the state changes
 
-//     //  so ref it comes when we need to interact or talk to the proivider and also to rebuild the widget when the state changes 
+//     //  so ref it comes when we need to interact or talk to the proivider and also to rebuild the widget when the state changes
 //     final todos = ref.watch(todoProvider);
 
 //     return Scaffold(

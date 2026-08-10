@@ -2,14 +2,18 @@ import 'package:advanced_firebase/features/todo/data/datasources/todo_remote_dat
 import 'package:advanced_firebase/features/todo/data/models/todo.dart';
 import 'package:advanced_firebase/features/todo/domain/repository/todo_repository.dart';
 
-class TodoRepositoryImple  implements TodoRepository{ 
 
-final TodoRemoteDatasource remoteDatasource ; 
-TodoRepositoryImple({required this.remoteDatasource});
 
- @override
-Future<List<TodoModel>> getTodos() async {  
-  return remoteDatasource.getTodos();
+// this is the implementation of the contract  it's says when someone asks the repository for todos  i will get them from my datasource 
+class TodoRepositoryImple  implements TodoRepository{
+TodoRepositoryImple({
+  required this.repository
+});
+
+  final TodoRemoteDatasource repository ; 
+
+  Future<List<TodoModel>> getTodos() async {
+    return repository.getTestingTodos();
+  }
   
-}
 }

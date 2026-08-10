@@ -17,7 +17,23 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Colors.blue,
       ),
-      home: const HomeScreen(),
+      home: const TodoApp(),
+    );
+  }
+}
+
+
+class TodoApp extends StatelessWidget {
+  const TodoApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primaryColor: Colors.blue,
+      ),
+      home: const TodoApp(),
     );
   }
 }
