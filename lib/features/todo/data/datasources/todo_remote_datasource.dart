@@ -37,5 +37,16 @@ class TodoRemoteDatasource {
   }
 }
 
-// Dependency Inversion Principle (DIP), the "D" in the SOLID software design rules. It means your main business rules should not break if a tool,
-// database, or small helper function changes. Instead of linking parts directly, you connect them through a general rule or outline
+
+
+
+// Then the response travels back:
+// API
+//  ↓
+// JSON
+//  ↓
+// TodoModel.fromJson()
+//  ↓
+// TodoRepositoryImpl
+//  ↓
+// Screen
