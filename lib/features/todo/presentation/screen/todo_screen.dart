@@ -1,51 +1,38 @@
-import 'package:advanced_firebase/features/todo/domain/entities/todo_entities.dart';
-import 'package:advanced_firebase/features/todo/domain/usecase/get_todo.dart';
+import 'package:advanced_firebase/features/todo/presentation/bloc/todo_bloc_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class TodoScreen extends StatefulWidget {
-  const TodoScreen({super.key, required this.getTodos});
-
-  final GetTodos getTodos;
-
-  @override
-  State<TodoScreen> createState() => _TodoScreenState();
-}
-
-class _TodoScreenState extends State<TodoScreen> {
-  late final Future<List<TodoEntities>> _todos;
-
-  @override
-  void initState() {
-    super.initState();
-    _todos = widget.getTodos();
-  }
+class TodoScreen extends StatelessWidget {
+  const TodoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Todo App')),
-      body: FutureBuilder(
-        future: _todos,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: BlocBuilder<TodoBlocBloc, TodoBlocState>(
+        builder: (context, state) {
+          if (state is TodoBlocInitial || state is TodoLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error ${snapshot.error}'));
+
+          if (state is TodoError) {
+            return Center(child: Text('Error: ${state.errorMessage}'));
           }
 
-          final data = snapshot.data ?? [];
+          if (state is TodoLoaded) {
+            return ListView.builder(
+              itemCount: state.todos.length,
+              itemBuilder: (context, index) {
+                final todo = state.todos[index];
+                return ListTile(
+                  leading: Checkbox(value: todo.completed, onChanged: null),
+                  title: Text(todo.title),
+                );
+              },
+            );
+          }
 
-          return ListView.builder(
-            itemCount: data.length,
-            itemBuilder: (context, index) {
-              final todoData = data[index];
-              return ListTile(
-                leading: Checkbox(value: todoData.completed, onChanged: null),
-                title: Text(todoData.title),
-              );
-            },
-          );
+          return const SizedBox.shrink();
         },
       ),
     );
